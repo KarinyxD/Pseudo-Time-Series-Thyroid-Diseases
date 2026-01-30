@@ -5,15 +5,14 @@ import preprocessamento as pp
 #import view as view
 #import data_longitudinal as dl
 
-df_norm, df_real, labels = pp.preprocessing_pts()
-#Calcular matriz euclidiana
-matriz_global, df_usado_global = me.compute_distance_matrix(df_norm)
-# Plotar a Matriz Global (geral dos dados)
-me.plot_full_matrix(matriz_global)
-# Análise Fina: 45 pacientes
-# matriz_45, labels_45 = me.plot_ordered_sample_matrix(df_norm, labels, n_samples=45)
-# Matriz numérica para inspeção
-df_numeros = me.inspect_numerical_matrix(df_norm, labels, n_samples=45)
+df_norm, df_real, severity_label = pp.preprocessing_pts()
+# Calcular matriz euclidiana, adicionar parametro na funcao para alterar a dimensao da matriz
+matriz, df_usado = me.compute_distance_matrix(df_norm, 50)
+# Plotar a Matriz
+me.plot_matrix(matriz)
+# Matriz numérica, alterar utlimo parametro para alterar a dimensao da matriz
+df_numeros = me.inspect_numerical_matrix(df_norm, severity_label, 45)
+
 # mst_matrix, root_node, full_dist_matrix = mst.build_mst_and_root(df_norm, labels)
 # mst.plot_mst_pca(df_norm, mst_matrix, labels, root_node)
 # df_final = dg.calculate_pseudo_time(mst_matrix, root_node, df_real, labels, df_norm)
