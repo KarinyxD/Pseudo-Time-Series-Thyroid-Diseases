@@ -1,24 +1,33 @@
-import MST as mst
+# import MST as mst
+import matriz_euclidiana as me
 import preprocessamento as pp
-import distancia_geodesica as dg
-import view as view
-import data_longitudinal as dl
+#import distancia_geodesica as dg
+#import view as view
+#import data_longitudinal as dl
 
 df_norm, df_real, labels = pp.preprocessing_pts()
-mst_matrix, root_node, full_dist_matrix = mst.build_mst_and_root(df_norm, labels)
-mst.plot_mst_pca(df_norm, mst_matrix, labels, root_node)
-df_final = dg.calculate_pseudo_time(mst_matrix, root_node, df_real, labels, df_norm)
-view.plot_trajectory(df_final)
+#Calcular matriz euclidiana
+matriz_global, df_usado_global = me.compute_distance_matrix(df_norm)
+# Plotar a Matriz Global (geral dos dados)
+me.plot_full_matrix(matriz_global)
+# Análise Fina: 45 pacientes
+# matriz_45, labels_45 = me.plot_ordered_sample_matrix(df_norm, labels, n_samples=45)
+# Matriz numérica para inspeção
+df_numeros = me.inspect_numerical_matrix(df_norm, labels, n_samples=45)
+# mst_matrix, root_node, full_dist_matrix = mst.build_mst_and_root(df_norm, labels)
+# mst.plot_mst_pca(df_norm, mst_matrix, labels, root_node)
+# df_final = dg.calculate_pseudo_time(mst_matrix, root_node, df_real, labels, df_norm)
+# view.plot_trajectory(df_final)
 
 
-# Gera o dataset final
-df_simulated = dl.generate_longitudinal_dataset(mst_matrix, root_node, df_real, labels)
-# 1. Salvar o DataFrame em um arquivo CSV local
-# index=False evita salvar a coluna de índice numérico do Pandas (0, 1, 2...) que não precisamos
-df_simulated.to_csv('simulacao_longitudinal_tireoide.csv', index=False)
+# # Gera o dataset final
+# df_simulated = dl.generate_longitudinal_dataset(mst_matrix, root_node, df_real, labels)
+# # 1. Salvar o DataFrame em um arquivo CSV local
+# # index=False evita salvar a coluna de índice numérico do Pandas (0, 1, 2...) que não precisamos
+# df_simulated.to_csv('simulacao_longitudinal_tireoide.csv', index=False)
 
 
-# Visualizar o "Histórico" de um paciente virtual
-print("\nExemplo de histórico do primeiro paciente virtual gerado:")
-first_patient = df_simulated['sim_patient_id'].iloc[0]
-print(df_simulated[df_simulated['sim_patient_id'] == first_patient][['time_step', 'TSH', 'real_class', 'age']])
+# # Visualizar o "Histórico" de um paciente virtual
+# print("\nExemplo de histórico do primeiro paciente virtual gerado:")
+# first_patient = df_simulated['sim_patient_id'].iloc[0]
+# print(df_simulated[df_simulated['sim_patient_id'] == first_patient][['time_step', 'TSH', 'real_class', 'age']])
