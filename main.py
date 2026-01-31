@@ -6,8 +6,8 @@ import MST as mst
 #import view as view
 #import data_longitudinal as dl
 
+# Pré-processamento dos dados
 df_norm, df_real, severity_label = pp.preprocessing_pts()
-
 
 # Gera matriz de distancia com os labels de severidade e retorna um Dataframe, n_samples define a dim. da matriz
 df_matrix = me.prepare_distance_dataframe(df_norm, severity_label)
@@ -17,7 +17,7 @@ df_matrix = me.prepare_distance_dataframe(df_norm, severity_label)
 # me.plot_numerical_matrix(df_matrix_small) # Pequena
 
 # Plota a Matriz de distancia euclidiana sem os valores numericos(parametro tem que ser um dataFrame)
-me.plot_overview_heatmap(df_matrix) # Grande
+#me.plot_overview_heatmap(df_matrix) # Grande
 
 # Calcular MST
 grafo_mst = mst.compute_mst(df_matrix)

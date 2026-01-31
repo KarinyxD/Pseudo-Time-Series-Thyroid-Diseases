@@ -57,7 +57,7 @@ def plot_mst_graph(G_mst):
     # Desenha as linhas (arestas)
     nx.draw_networkx_edges(G_mst, pos, alpha=0.4, width=1.5, edge_color='gray')
     
-    # Desenha os rótulos- (Só desenha se tiver menos de 100 para não poluir)
+    # Desenha os rótulos (Só desenha se tiver menos de 100 para não poluir)
     if len(G_mst.nodes()) < 100:
         nx.draw_networkx_labels(G_mst, pos, font_size=8, font_weight='bold')
 
