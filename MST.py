@@ -1,107 +1,76 @@
-from scipy.spatial.distance import pdist, squareform
-from scipy.sparse.csgraph import minimum_spanning_tree
-import numpy as np
-
-def build_mst_and_root(df_normalized, labels):
-    print("1. Calculando Matriz de Distância Euclidiana (pode demorar alguns segundos)...")
-    # pdist calcula a distância entre todos os pares de linhas
-    dist_array = pdist(df_normalized.values, metric='euclidean')
-    dist_matrix = squareform(dist_array)
-    
-    print("2. Construindo a Minimum Spanning Tree (MST)...")
-    # Isso retorna uma matriz esparsa onde só as conexões essenciais existem
-    mst_matrix = minimum_spanning_tree(dist_matrix)
-    
-    print("3. Identificando o Nó Raiz (O paciente 'mais saudável')...")
-    # Estratégia: Pegar o centroide da classe '-' (0) e achar o paciente mais próximo dele
-    # Isso evita pegar um outlier como raiz.
-    
-    # Filtra indices onde a classe é '-' (0)
-    healthy_indices = np.where(labels == 0)[0] 
-    
-    # Calcula o paciente médio saudável (centroide)
-    healthy_centroid = df_normalized.iloc[healthy_indices].mean().values
-    
-    # Acha qual paciente real tem a menor distância para esse centroide
-    # Usamos cdist para medir a distância de todos os saudáveis até o centroide
-    from scipy.spatial.distance import cdist
-    distances_to_centroid = cdist(df_normalized.iloc[healthy_indices].values, [healthy_centroid])
-    
-    # O índice relativo dentro do grupo de saudáveis
-    closest_relative_idx = np.argmin(distances_to_centroid)
-    
-    # O índice real no dataframe original
-    root_node_idx = healthy_indices[closest_relative_idx]
-    
-    print(f"Nó Raiz identificado: Índice {root_node_idx}")
-    print(f"Valores do paciente Raiz (Padronizados):\n{df_normalized.iloc[root_node_idx]}")
-    
-    return mst_matrix, root_node_idx, dist_matrix
-
+import networkx as nx
+from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
-from sklearn.decomposition import PCA
-from matplotlib.collections import LineCollection
 
-def plot_mst_pca(df_normalized, mst_matrix, labels, root_node_idx):
-    print("1. Reduzindo dimensionalidade para 2D (PCA) para visualização...")
-    pca = PCA(n_components=2)
-    coords = pca.fit_transform(df_normalized)
+def compute_mst(df_matrix_numerica):
+    """
+    Recebe o DataFrame da matriz de distâncias e retorna o Grafo da MST.
+    Algoritmo: Prim (ideal para grafos densos onde todos se conectam).
+    """
+    # 1. Transforma o DataFrame em um Grafo Completo (Todos ligados a todos)
+    # O valor da célula vira o 'weight' (peso/distância) da aresta
+    G_completo = nx.from_pandas_adjacency(df_matrix_numerica)
     
-    # Extrair coordenadas X e Y
-    x = coords[:, 0]
-    y = coords[:, 1]
+    # 2. Calcula a Árvore Geradora Mínima (MST)
+    # O NetworkX já otimiza isso internamente
+    G_mst = nx.minimum_spanning_tree(G_completo, algorithm='prim')
     
-    print("2. Preparando as conexões da árvore...")
-    # mst_matrix é uma matriz esparsa. .nonzero() nos dá as conexões (quem liga com quem)
-    rows, cols = mst_matrix.nonzero()
+    print(f"--- MST Calculada ---")
+    print(f"Nós (Pacientes): {G_mst.number_of_nodes()}")
+    print(f"Arestas (Conexões): {G_mst.number_of_edges()}")
     
-    # Criar uma lista de segmentos de linha [(x1, y1), (x2, y2)]
-    # Isso é muito mais rápido que usar plt.plot num loop
-    lines = []
-    for i, j in zip(rows, cols):
-        p1 = (x[i], y[i])
-        p2 = (x[j], y[j])
-        lines.append([p1, p2])
-        
-    print("3. Gerando o gráfico...")
-    plt.figure(figsize=(14, 10))
-    
-    # A. Desenhar as linhas da árvore (MST)
-    lc = LineCollection(lines, colors='gray', alpha=0.3, linewidths=0.5, zorder=1)
-    plt.gca().add_collection(lc)
-    
-    # B. Desenhar os pacientes (Nós)
-    # Cores baseadas na classe
-    class_colors = {0: 'tab:blue', 1: 'tab:olive', 2: 'tab:orange', 3: 'tab:red', 4: 'tab:purple'}
-    # Mapear labels numéricos de volta para cores
-    colors = [class_colors.get(l, 'gray') for l in labels]
-    
-    scatter = plt.scatter(x, y, c=colors, s=15, alpha=0.8, zorder=2, label='Pacientes')
-    
-    # C. Destacar a Raiz (Root)
-    plt.scatter(x[root_node_idx], y[root_node_idx], c='black', s=200, marker='*', edgecolors='white', zorder=3, label='RAIZ (Início)')
+    return G_mst
 
-    # Legenda manual para ficar bonito
-    from matplotlib.lines import Line2D
+
+def plot_mst_graph(G_mst):
+    """
+    Recebe um objeto Grafo (MST) e plota a visualização.
+    Colore os nós baseado na gravidade (G0 a G4) encontrada no nome do nó.
+    """
+    plt.figure(figsize=(15, 12))
+    
+    # 1. Layout (O algoritmo de força que espalha os nós para não ficarem amontoados)
+    # k=0.5 controla o espaçamento; seed=42 garante que o desenho não mude se rodar de novo
+    pos = nx.spring_layout(G_mst, k=0.5, seed=42)
+    
+    # 2. Lógica de Cores (Baseada no nome "Pct_123 (G0)")
+    # Definimos uma cor para cada grau
+    colors = []
+    for node_name in G_mst.nodes():
+        if "(G0)" in node_name:
+            colors.append('#2ecc71') # Verde (Saudável)
+        elif "(G1)" in node_name:
+            colors.append('#f1c40f') # Amarelo
+        elif "(G2)" in node_name:
+            colors.append('#e67e22') # Laranja
+        elif "(G3)" in node_name:
+            colors.append('#e74c3c') # Vermelho
+        elif "(G4)" in node_name:
+            colors.append('#8e44ad') # Roxo (Secundário)
+        else:
+            colors.append('gray')    # Caso não ache o rótulo
+
+    # 3. Desenhar a Árvore
+    # Desenha os nós
+    nx.draw_networkx_nodes(G_mst, pos, node_size=300, node_color=colors, alpha=0.9, edgecolors='black')
+    
+    # Desenha as linhas (arestas)
+    nx.draw_networkx_edges(G_mst, pos, alpha=0.4, width=1.5, edge_color='gray')
+    
+    # Desenha os rótulos- (Só desenha se tiver menos de 100 para não poluir)
+    if len(G_mst.nodes()) < 100:
+        nx.draw_networkx_labels(G_mst, pos, font_size=8, font_weight='bold')
+
+    # Legenda Manual (Para saber quem é quem)
     legend_elements = [
-        Line2D([0], [0], marker='o', color='w', markerfacecolor='tab:blue', label='Saudável (-)'),
-        Line2D([0], [0], marker='o', color='w', markerfacecolor='tab:olive', label='Compensado (G)'),
-        Line2D([0], [0], marker='o', color='w', markerfacecolor='tab:orange', label='Primário (F)'),
-        Line2D([0], [0], marker='o', color='w', markerfacecolor='tab:red', label='Severo (E)'),
-        Line2D([0], [0], marker='o', color='w', markerfacecolor='tab:purple', label='Secundário (H)'),
-        Line2D([0], [0], marker='*', color='w', markerfacecolor='black', label='Start Node', markersize=15),
+        Line2D([0], [0], marker='o', color='w', markerfacecolor='#2ecc71', label='G0: Saudável', markersize=10),
+        Line2D([0], [0], marker='o', color='w', markerfacecolor='#f1c40f', label='G1: Leve', markersize=10),
+        Line2D([0], [0], marker='o', color='w', markerfacecolor='#e67e22', label='G2: Moderado', markersize=10),
+        Line2D([0], [0], marker='o', color='w', markerfacecolor='#e74c3c', label='G3: Severo', markersize=10),
+        Line2D([0], [0], marker='o', color='w', markerfacecolor='#8e44ad', label='G4: Secundário', markersize=10)
     ]
-    plt.legend(handles=legend_elements, loc='best')
+    plt.legend(handles=legend_elements, loc='upper right')
     
-    plt.title('Visualização da Minimum Spanning Tree (Projetada via PCA)')
-    plt.xlabel('Componente Principal 1')
-    plt.ylabel('Componente Principal 2')
-    plt.tight_layout()
+    plt.title("Árvore Geradora Mínima (MST)\nConexões Biológicas Mais Fortes", fontsize=14)
+    plt.axis('off')
     plt.show()
-
-# --- EXECUÇÃO ---
-# Precisa ter rodado os passos anteriores para ter essas variáveis
-# plot_mst_pca(df_norm, mst_matrix, labels, root_node)
-
-# Rodando a parte 2
-# mst_matrix, root_node, full_dist_matrix = build_mst_and_root(df_norm, labels)

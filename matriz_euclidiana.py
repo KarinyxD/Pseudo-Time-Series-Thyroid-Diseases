@@ -31,69 +31,96 @@ def compute_distance_matrix(df_normalized, sample_size=None):
     print(f"Matriz calculada com sucesso. Dimensões: {dist_matrix.shape}")
     return dist_matrix, df_used
 
-
-# --- 2. FUNÇÃO PARA PLOTAR A MATRIZ (mapa de calor) ---
-def plot_matrix(dist_matrix):
+# --- 2. FUNÇÃO PARA INSPECIONAR A MATRIZ NUMÉRICA, GERAR DATAFRAME ---
+def prepare_distance_dataframe(df_normalized, label, n_samples=None):
     """
-    Plota o heatmap da matriz fornecida.
-    Para visualizar a densidade e outliers.
+    1. Faz a amostragem garantindo que Dados e o Label_Severity fiquem alinhados.
+    2. Chama compute_distance_matrix para fazer o cálculo.
+    3. Retorna um DataFrame Pandas com index e colunas nomeados (ex: 'Pct_10 (G0)').
     """
-    plt.figure(figsize=(10, 10))
-    
-    # square=True garante proporção 1:1 dos eixos
-    sns.heatmap(dist_matrix, cmap='viridis_r', square=True, 
-                xticklabels=False, yticklabels=False, cbar_kws={"shrink": .8})
-    
-    plt.title(f"Matriz de Distância ({dist_matrix.shape[0]} Pacientes)\n"
-              "Cores: Claro = Similar | Escuro = Diferente")
-    plt.show()
-
-
-# --- 3. FUNÇÃO PARA PLOTAR A MATRIZ NUMÉRICA ---
-def inspect_numerical_matrix(df_normalized, label, n_samples):
-    """
-    Gera uma visualização focada nos NÚMEROS da matriz de distância.
-    Usa amostragem fixa (RANDOM_SEED).
-    """
-    
-    # 1. Preparação
+    # --- PREPARAÇÃO E AMOSTRAGEM ---
+    # Unir dados e label severity temporariamente para garantir que, ao sortear,
+    # o rótulo do paciente não se perca do exame dele.
     df_temp = df_normalized.copy()
     df_temp['label_severity'] = label
     
-    # 2. Amostragem com Random State fixo
-    df_sample = df_temp.sample(n=n_samples, random_state=RANDOM_SEED)
+    # Se n_samples for definido e menor que o total, fazemos o sorteio
+    if n_samples and n_samples < len(df_temp):
+        df_sample = df_temp.sample(n=n_samples, random_state=RANDOM_SEED)
+    else:
+        df_sample = df_temp
 
-    # Separar dados e label para processamento
-    label_sample = df_sample['label_severity'] # coluna de doenças para legenda
-    indices_originais = df_sample.index # id's dos pacientes
+    # Separamos de volta: Dados para um lado, Label para o outro
+    label_sample = df_sample['label_severity'] 
+    indices_originais = df_sample.index 
     data_sample = df_sample.drop(columns=['label_severity']) 
     
-    # 3. CHAMADA DA FUNÇÃO DE CÁLCULO
-    # retorna (matriz, df_usado), pegamos só a matriz
-    dist_matrix, _ = compute_distance_matrix(data_sample)
+    # --- CHAMADA DA compute_distance_matriz ---
+    # Sample_size=None porque a amostragem já foi feita
+    # Retorna a matriz numpy (sem rótulos)
+    dist_matrix_numpy, _ = compute_distance_matrix(data_sample, sample_size=None)
     
-    # 4. Criar DataFrame Visual (para plotagem)
+    # --- FORMATAÇÃO DO DATAFRAME FINAL ---
+    # Cria a lista de nomes: "Pct_ID (G_GRAU)"
     nomes_colunas = [f"Pct_{idx} (G{grau})" for idx, grau in zip(indices_originais, label_sample)]
     
-    df_matrix_numerica = pd.DataFrame(
-        dist_matrix, 
+    # Gera o DataFrame Pandas com os nomes
+    df_matrix_formatada = pd.DataFrame(
+        dist_matrix_numpy, 
         index=nomes_colunas, 
         columns=nomes_colunas
     )
+    
+    return df_matrix_formatada
 
-    # 5. Plotagem
+# --- 3. FUNÇÃO PARA PLOTAR MAPA DE CALOR (VISÃO GERAL / SEM NÚMEROS) ---
+def plot_overview_heatmap(df_matrix):
+    """
+    Plota um heatmap SOMENTE VISUAL (sem números e sem nomes nos eixos).
+    (Performance rápida).
+    Args:
+        df_matrix: DataFrame da matriz de distâncias.
+    """
+    # Tamanho da figura (pode ser menor pois não tem texto para ler)
+    plt.figure(figsize=(12, 10))
+    
+    # Heatmap Otimizado
+    sns.heatmap(
+        df_matrix, 
+        cmap='viridis_r', 
+        annot=False,          # <--- Não escreve números
+        square=True, 
+        xticklabels=False,    # Esconde os nomes
+        yticklabels=False,    # Esconde os nomes
+        cbar_kws={"shrink": .8, "label": "Distância Euclidiana"}
+    )
+    
+    n_pacientes = df_matrix.shape[0]
+    
+    plt.title(f"Visão Macro: Matriz de Distância ({n_pacientes} Pacientes)\n"
+              "Cores: Claro (Amarelo) = Próximo | Escuro (Roxo) = Distante")
+    
+    plt.tight_layout() 
+    plt.show()
+
+# --- 4. FUNÇÃO PARA PLOTAR A MATRIZ COM NÚMEROS ---
+def plot_numerical_matrix(df_matrix):
+    """
+    Recebe o DataFrame já formatado e exibe o Heatmap com números.
+    """
     plt.figure(figsize=(20, 18)) 
     
     sns.heatmap(
-        df_matrix_numerica, 
+        df_matrix, 
         cmap='viridis_r', 
-        annot=True,          # Escreve os números
-        fmt=".1f",           # 1 casa decimal
+        annot=True,          
+        fmt=".1f",           
         annot_kws={"size": 8}, 
         square=True,
         cbar_kws={"shrink": .5}
     )
     
+    n_samples = len(df_matrix)
     plt.title(f"Matriz Numérica - ({n_samples} Pacientes)")
     plt.xticks(rotation=90, fontsize=8)
     plt.yticks(rotation=0, fontsize=8)
