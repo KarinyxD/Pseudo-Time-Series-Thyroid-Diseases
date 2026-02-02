@@ -30,7 +30,7 @@ limits = {
 
 def preprocessing_pts():
     # Carregar Dataset
-    df = pd.read_csv("thyroidDF.csv") 
+    df = pd.read_csv("csv/thyroidDF.csv") 
     
     # Limpeza Básica de Target
     df = df.dropna(subset=['target'])

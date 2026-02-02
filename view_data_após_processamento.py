@@ -26,7 +26,7 @@ except KeyError:
     pass 
 
 # 5. Salvar o CSV
-nome_arquivo = "dados_processados.csv"
+nome_arquivo = "csv/dados_processados.csv"
 df_final_visual.to_csv(nome_arquivo, index=True)
 
 print(f"Arquivo '{nome_arquivo}' gerado com sucesso!")

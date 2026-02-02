@@ -1,6 +1,10 @@
 import networkx as nx
 from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
+import numpy as np
+import random
+from sklearn.manifold import MDS
+from collections import deque
 
 def compute_mst(df_matrix_numerica):
     """
@@ -82,15 +86,6 @@ def plot_mst_graph_sample_mds(G_mst, sample_size=100, random_state=8):
 
     Distância = menor caminho ponderado
     """
-
-    import numpy as np
-    import random
-    import networkx as nx
-    import matplotlib.pyplot as plt
-    from matplotlib.lines import Line2D
-    from sklearn.manifold import MDS
-    from collections import deque
-
     random.seed(random_state)
 
     # ============================
