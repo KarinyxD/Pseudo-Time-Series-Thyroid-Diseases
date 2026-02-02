@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.spatial.distance import pdist, squareform
 
-RANDOM_SEED = 6 #trocar o random_state para variar a amostra
+RANDOM_SEED = 22  #trocar o random_state para variar a amostra
+# (visualizar a MST): 22, 25, 33, 61
 
 # --- 1. FUNÇÃO PARA CALCULAR A MATRIZ ---
 def compute_distance_matrix(df_normalized, sample_size=None):
@@ -125,3 +126,79 @@ def plot_numerical_matrix(df_matrix):
     plt.xticks(rotation=90, fontsize=8)
     plt.yticks(rotation=0, fontsize=8)
     plt.show()
+
+
+def prepare_distance_dataframe_amost(df_normalized,label,n_g0=50,n_g1=10,n_g2=10):
+    # ============================
+    # 1. UNIR DADOS E RÓTULOS
+    # ============================
+    df_temp = df_normalized.copy()
+    df_temp['label_severity'] = label
+
+    # ============================
+    # 2. SEPARAR POR SEVERIDADE
+    # ============================
+    df_g0 = df_temp[df_temp['label_severity'] == 0]
+    df_g1 = df_temp[df_temp['label_severity'] == 1]
+    df_g2 = df_temp[df_temp['label_severity'] == 2]
+    df_g3 = df_temp[df_temp['label_severity'] == 3]
+    df_g4 = df_temp[df_temp['label_severity'] == 4]
+
+    # ============================
+    # 3. AMOSTRAGEM CONTROLADA
+    # ============================
+    sample_g4 = df_g4                          # todos
+    sample_g3 = df_g3                          # todos
+    sample_g2 = df_g2.sample(
+        n=min(n_g2, len(df_g2)),
+        random_state=RANDOM_SEED
+    )
+    sample_g1 = df_g1.sample(
+        n=min(n_g1, len(df_g1)),
+        random_state= RANDOM_SEED
+    )
+    sample_g0 = df_g0.sample(
+        n=min(n_g0, len(df_g0)),
+        random_state=RANDOM_SEED
+    )
+
+    # ============================
+    # 4. CONCATENAR AMOSTRA FINAL
+    # ============================
+    df_sample = pd.concat(
+        [sample_g4, sample_g3, sample_g2, sample_g1, sample_g0]
+    ).sample(frac=1, random_state=RANDOM_SEED)  # embaralha
+
+    # ============================
+    # 5. SEPARAR DADOS E RÓTULOS
+    # ============================
+    label_sample = df_sample['label_severity']
+    indices_originais = df_sample.index
+    data_sample = df_sample.drop(columns=['label_severity'])
+
+    print("--- Amostragem Estratificada ---")
+    print(label_sample.value_counts().sort_index())
+
+    # ============================
+    # 6. MATRIZ DE DISTÂNCIAS
+    # ============================
+    dist_matrix_numpy, _ = compute_distance_matrix(
+        data_sample,
+        sample_size=None
+    )
+
+    # ============================
+    # 7. FORMATAR DATAFRAME FINAL
+    # ============================
+    nomes = [
+        f"Pct_{idx} (G{grau})"
+        for idx, grau in zip(indices_originais, label_sample)
+    ]
+
+    df_matrix_formatada = pd.DataFrame(
+        dist_matrix_numpy,
+        index=nomes,
+        columns=nomes
+    )
+
+    return df_matrix_formatada
