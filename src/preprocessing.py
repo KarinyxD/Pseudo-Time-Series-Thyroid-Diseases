@@ -31,7 +31,7 @@ limits = {
 
 def preprocessing_pts():
     # Carregar Dataset
-    df = pd.read_csv("csv/thyroidDF.csv") 
+    df = pd.read_csv("data/raw/thyroidDF.csv") 
     
     # Limpeza Básica de Target
     df = df.dropna(subset=['target'])
@@ -85,5 +85,31 @@ def preprocessing_pts():
     
     return df_normalized, df_imputed, df['severity_label']
 
-# Executar
-# df_norm, df_real, label_severity = preprocessing_pts()
+def export_data_pp(df_norm, df_real, label):
+    # Preparação para o CSV de Visualização
+    # Ex: "TSH_real" e "TSH_zscore"
+    # Dados reais vs dados normalizados 
+    df_visual = df_real.add_suffix('_real')        # Adiciona sufixo nos valores reais
+    df_norm_visual = df_norm.add_suffix('_zscore') # Adiciona sufixo nos valores normalizados
+
+    # Juntar tudo em um único DataFrame 
+    # axis=1 significa juntar colunas, index=True garante que os pacientes alinhem corretamente
+    df_final_visual = pd.concat([df_visual, df_norm_visual, label], axis=1)
+
+    # Reordenar colunas para facilitar a leitura
+    # Coloca o label no começo, seguido de parzinhos (TSH_real, TSH_zscore, ...)
+    cols = ['severity_label']
+    for col in df_real.columns:
+        cols.append(f"{col}_real")
+        cols.append(f"{col}_zscore")
+    try:
+        df_final_visual = df_final_visual[cols]
+    except KeyError:
+        pass 
+
+    # 5. Salvar o CSV
+    nome_arquivo = "data/processed/processed_data.csv"
+    df_final_visual.to_csv(nome_arquivo, index=True)
+
+    print(f"Arquivo '{nome_arquivo}' gerado com sucesso!")
+    print("Para conferir se o Z-Score faz sentido comparado ao valor real.")
