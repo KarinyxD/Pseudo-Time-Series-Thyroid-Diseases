@@ -6,11 +6,13 @@
 ![Status](https://img.shields.io/badge/Status-Active-success?style=flat-square)
 
 ## 📖 Overview
-**How do you map the evolution of a disease when you only have static snapshots?**
+**How do you map the temporal evolution of a disease using only static snapshots?**
 
-This project implements a **Trajectory Inference** pipeline that reconstructs the continuous progression of Hypothyroidism using cross-sectional clinical data. By applying **Graph Theory (Minimum Spanning Tree)** and **Manifold Learning** concepts, we mathematically order patients along a "Pseudo-Time" axis.
+This project implements a **Trajectory Inference** pipeline designed to construct **Pseudo-Time Series** from static **cross-sectional databases**.
 
-The result is a dynamic model that transforms static hormonal profiles (TSH, T3, T4) into a longitudinal timeline, allowing for the study of disease transition states without requiring years of patient follow-up.
+Traditional cross-sectional studies provide only a snapshot of disease processes, lacking the temporal dimension required for prognostic modeling. To bridge this gap, we apply **Euclidean Distance** and **Graph Theory (Minimum Spanning Tree)** to reconstruct the latent temporal structure of Hypothyroidism.
+
+By mathematically ordering patients along an inferred **"Pseudo-Time" axis**, we transform static hormonal profiles (TSH, T3, T4, FTI, T4U) into a continuous longitudinal timeline. This allows for the analysis of disease transition states and progression dynamics without the prohibitive cost and time constraints of collecting true longitudinal data.
 
 ---
 
@@ -22,7 +24,7 @@ In healthcare analytics, understanding *how* a patient transitions from "Healthy
 Most available datasets are **Cross-Sectional** (snapshots of many different patients at a single point in time). Traditional Machine Learning classifiers can label these patients, but they cannot tell the story of *progression*.
 
 ### 💡 The Solution
-We treat the N-dimensional feature space as a topological map. By calculating the **Geodesic Distance** (shortest path) between patients on a graph, we infer their relative position in the disease timeline.
+We model the N-dimensional feature space by computing Euclidean Distances to build a Minimum Spanning Tree (MST) structure. By defining a "Healthy" reference point as the root, we calculate the cumulative path distance along the tree to every other patient. This allows us to mathematically infer their temporal ordering and reconstruct the disease trajectory.
 
 ---
 
@@ -31,23 +33,28 @@ We treat the N-dimensional feature space as a topological map. By calculating th
 The pipeline is modularized into four distinct stages:
 
 ### 1. Data Embedding & Space Construction
-* **Input:** Raw clinical data (`thyroidDF.csv`).
+* **Input:** Raw clinical data sourced from Kaggle ([Thyroid Disease Data](https://www.kaggle.com/datasets/emmanuelfwerr/thyroid-disease-data)). 
 * **Process:** Outlier removal, cleaning, and Z-Score normalization of hormonal features (TSH, T3, TT4, T4U, FTI, Age).
-* **Goal:** Create a normalized feature space where Euclidean distance represents biological similarity.
+* **Goal:** Preprocess and standardize raw data to ensure the dataset is clean, consistent, and ready for computational modeling.
 
-### 2. Topological Modeling (MST)
-* **Algorithm:** We compute a similarity matrix and build a **Minimum Spanning Tree (MST)**.
+### 2. Robustness Analysis (Stratified Stochastic Subsampling)
+* To validate that the inferred trajectory is **topologically stable** and not driven by sample density artifacts, we implemented a **Hybrid Monte Carlo Subsampling** strategy ($k=1500$ iterations).
+* **Stochastic Quotas:** Unlike standard bootstrapping (which may generate disconnected graphs in imbalanced data), we enforce variable quotas to guarantee **manifold connectivity** in every sample ($T=30$):
+    * **Severe ($n \in [1, 10]$):** Tests trajectory resilience in both sparse (single-case) and dense scenarios, ensuring the disease endpoint is structural rather than accidental.
+    * **Moderate ($n \in [5, 10]$) & Healthy ($n \in [1, 4]$):** Ensures the existence of a transitional "bridge" and a robust "root" for pseudotime calculation.
+* **Natural Density:** Remaining slots ($T - \sum selected$) are filled randomly from the global pool. This preserves the original dataset's healthy-dominant distribution without introducing artificial bias in the non-severe regions.
+* **Advantage over Reference:** This approach resolves the "missing endpoint" problem common in standard random sampling of imbalanced cohorts, ensuring that **100% of iterations** generate valid, connected trajectories for consensus building.
+
+### 3. Topological Modeling (Euclidean Matrix and MST)
+* **Algorithm:** We compute a euclidean distance matrix and build a **Minimum Spanning Tree (MST)**.
 * **Why MST?** It connects all patients with the minimum possible total edge weight, revealing the "skeleton" of the data structure and filtering out noise/weak connections.
 
-### 3. Pseudo-Time Inference (Dijkstra)
+### 4. Pseudo-Time Inference (Dijkstra)
 * **Root Definition:** A centroid of healthy patients is defined as $t=0$.
 * **Pathfinding:** We use **Dijkstra's Algorithm** to calculate the distance from the root to every other patient along the MST edges.
 * **Result:** This distance is the **Pseudo-Time**. It represents the "severity score" or the evolutionary stage of the disease.
 
-### 4. Stochastic Validation (Bootstrap)
-* To ensure the trajectory isn't an artifact of specific outliers, we perform **Bootstrap Resampling** (Monte Carlo simulation).
-* **50+ Iterations:** We generate 50 parallel datasets, build 50 MSTs, and compute 50 distinct trajectories.
-* **Consensus:** The final output is a robust consensus trajectory that minimizes variance.
+
 
 ---
 
@@ -72,11 +79,11 @@ The codebase is organized as a scalable Python package:
 ```text
 thyroid-trajectory/
 ├── data/
-│   ├── raw/                # Original dataset (immutable)
-│   ├── processed/          # Cleaned data and final CSV outputs
-│   ├── results             # 
+│   ├── raw/                # Original dataset 
+│   ├── processed/          # Cleaned data
+│   ├── results             # final CSV outputs (with patient trajectories) 
 |
-├── figures/                # Generated plots (High-Res)
+├── figures/                # Generated plots 
 │
 ├── src/                    # Source Code Package
 │   ├── __init__.py         # Package initialization
@@ -84,7 +91,7 @@ thyroid-trajectory/
 │   ├── euclidean_matrix.py # Distance Matrix Computation
 │   ├── mst.py              # Graph Topology & Tree Construction
 │   ├── trajectory.py       # Pathfinding (Dijkstra) & Sorting Logic
-│   └── bootstrap.py        # Resampling Orchestration
+│   └── bootstrap.py        # Data Resampling Logic
 │
 ├── main.py                 # Main execution pipeline
 ├── requirements.txt        # Project dependencies
@@ -100,7 +107,7 @@ To replicate the analysis and generate the pseudo-time trajectories:
 1.  **Clone the repository:**
     ```bash
     git clone [https://github.com/KarinyxD/Pseudo-Time-Series-Thyroid-Diseases.git](https://github.com/seu-usuario/thyroid-trajectory.git)
-    cd thyroid-trajectory
+    cd Pseudo-Time-Series-Thyroid-Diseases 
     ```
 
 2.  **Install dependencies:**
@@ -126,4 +133,5 @@ The script will generate a CSV file in `data/results/trajectories.csv` containin
 ## 👤 Author
 
 **Kariny Abrahão**
+
 *Computer Scientist*
