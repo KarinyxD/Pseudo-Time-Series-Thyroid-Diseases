@@ -30,8 +30,14 @@ def compute_distance_matrix(df_normalized, sample_size=None):
     dist_vector = pdist(df_used.values, metric='euclidean') #vetor de distancias
     dist_matrix = squareform(dist_vector) # converte para matriz quadrada
     
-    print(f"Matriz calculada com sucesso. Dimensões: {dist_matrix.shape}")
-    return dist_matrix, df_used
+    # Gera o DataFrame Pandas com os nomes
+    df_matrix_formatada = pd.DataFrame(
+        dist_matrix,
+        index=df_used.index,   # Garante que saberemos quem é o paciente certo
+        columns=df_used.index
+    )
+
+    return dist_matrix, df_matrix_formatada
 
 
 # --- 2. FUNÇÃO PARA INSPECIONAR A MATRIZ CALCULADA, GERA DATAFRAME --- 

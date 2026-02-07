@@ -17,10 +17,6 @@ def mst(df_matrix_numerica):
     # Calcula a Árvore Geradora Mínima (MST)
     G_mst = nx.minimum_spanning_tree(G_completo, algorithm='prim')
     
-    print(f"--- MST Calculada ---")
-    print(f"Nós (Pacientes): {G_mst.number_of_nodes()}")
-    print(f"Arestas (Conexões): {G_mst.number_of_edges()}")
-    
     return G_mst
 
 
@@ -156,3 +152,43 @@ def plot_mds_full_mst(G_mst):
     plt.title("Visualização MDS da Árvore Completa", fontsize=14)
     plt.axis('off')
     plt.show()
+
+def plotar_mst_amostra(grafo_mst, id_severity_recorte, numero_amostra):
+    """
+    Função auxiliar para visualizar a MST gerada.
+    Usa o layout Kamada-Kawai para respeitar as distâncias reais (pesos).
+    """
+    plt.figure(figsize=(10, 6))
+    
+    # 1. Layout "Físico" (Respeita o peso das arestas para definir a distância visual)
+    pos = nx.kamada_kawai_layout(grafo_mst, weight='weight')
+    
+    # 2. Mapeamento de Cores
+    # 0: Saudável (Verde), 1: Moderado (Laranja), 2: Grave (Vermelho)
+    mapa_cores = {0: '#2ecc71', 1: '#f39c12', 2: '#e74c3c'}
+    
+    # Cria a lista de cores na mesma ordem dos nós do grafo
+    lista_cores = []
+    for node in grafo_mst.nodes():
+        classe = id_severity_recorte.loc[node] # Busca a classe desse ID específico
+        lista_cores.append(mapa_cores[classe])
+
+    # 3. Desenho
+    nx.draw_networkx_edges(grafo_mst, pos, alpha=0.4, width=1.0)
+    nx.draw_networkx_nodes(grafo_mst, pos, node_color=lista_cores, node_size=400, edgecolors='black')
+    
+    # Adiciona os IDs (opcional, se ficar muito poluído pode comentar)
+    nx.draw_networkx_labels(grafo_mst, pos, font_size=8, font_color='black', font_weight='bold')
+    
+    # 4. Legenda Personalizada
+    legenda_elementos = [
+        Line2D([0], [0], marker='o', color='w', label='Saudável (0)', markerfacecolor='#2ecc71', markersize=10),
+        Line2D([0], [0], marker='o', color='w', label='Moderado (1)', markerfacecolor='#f39c12', markersize=10),
+        Line2D([0], [0], marker='o', color='w', label='Grave (2)', markerfacecolor='#e74c3c', markersize=10)
+    ]
+    plt.legend(handles=legenda_elementos, loc='best')
+    
+    plt.title(f"Visualização da MST - Amostra #{numero_amostra}\n(Layout baseado na Similaridade Biológica)")
+    plt.axis('off')
+    plt.show()
+
