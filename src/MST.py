@@ -1,10 +1,6 @@
 import networkx as nx
 from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
-import numpy as np
-import random
-from sklearn.manifold import MDS
-from collections import deque
 
 # Cria o grafo e calcula a MST usando o algoritmo de Prim
 def mst(df_matrix_numerica):

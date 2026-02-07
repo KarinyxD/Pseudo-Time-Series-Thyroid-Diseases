@@ -88,8 +88,7 @@ thyroid-trajectory/
 │
 ├── main.py                 # Main execution pipeline
 ├── requirements.txt        # Project dependencies
-└── README.md               # Documentation
-```
+└── README.md               # Documentation```
 
 ---
 
