@@ -5,7 +5,7 @@ from sklearn.preprocessing import StandardScaler
 
 # --- CONFIGURAÇÕES ---
 # Focamos apenas em Negativos e Hipotireoidismo
-classes = ['-', 'E', 'F', 'G', 'H'] 
+classes = ['-', 'E', 'F', 'G'] 
 
 # Mapeamento para referência futura (preservando sub-classes)
 # Vamos usar isso para colorir o gráfico depois
@@ -14,8 +14,9 @@ class_mapping_details = {
     '-': 0,  # Healthy
     'G': 1,  # Compensated (Início da falha) TSH elevado e T3, T4 normais.
     'F': 2,  # Primary (Falha estabelecida) TSH bem elevado, T4 baixo, T3 baixo ou normal.
-    'E': 3,  # Hypothyroid (Severo) TSH muito elevado, T4 e T3 muito baixo.
-    'H': 4   # Secondary (Ramo paralelo) TSH baixo/normal, T4, T3 baixo.
+    'E': 2,  # Hypothyroid (Severo) TSH muito elevado, T4 e T3 muito baixo.
+    # Mesclar severidade (E) na 2 (F), já que temos poucos casos de E (1 paciente).
+    # 'H': 4   # Secondary (Ramo paralelo) TSH baixo/normal, T4, T3 baixo.
 }
 
 # Features Numéricas (Essenciais para a Distância Euclidiana)
@@ -73,7 +74,7 @@ def preprocessing_pts():
     scaler = StandardScaler()
     df_normalized_vals = scaler.fit_transform(df_imputed)
     df_normalized = pd.DataFrame(df_normalized_vals, columns=num_features, index=df_model.index)
-    
+
     # Retornamos:
     # 1. df_normalized: Para calcular a matriz de distância (padronizado) 
     # 2. df_imputed: Os valores reais para plotar gráficos depois (valores originais)
@@ -85,4 +86,4 @@ def preprocessing_pts():
     return df_normalized, df_imputed, df['severity_label']
 
 # Executar
-# df_norm, df_real, labels = preprocessing_pts()
+# df_norm, df_real, label_severity = preprocessing_pts()
