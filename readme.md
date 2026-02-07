@@ -56,11 +56,11 @@ The pipeline is modularized into four distinct stages:
 ### The "Trajectory Beam" (Stability Analysis)
 This visualization validates the robustness of the inferred timeline.
 
-![Bootstrap Beam Plot](figures/figure_8.png)
+![Bootstrap Beam Plot](figures/Figure_8.png)
 *> **Figure 1:** The "Beam" of Disease Progression. The X-axis represents the inferred **Pseudo-Time**. The Y-axis represents TSH levels. Each thin grey line is a bootstrap simulation. The **solid colored line** is the consensus trajectory. Note the exponential rise in TSH as the pseudo-time advances, capturing the biological feedback loop failure.*
 
 ### The Manifold Topology (MST)
-![MST Graph](figures/figure_7.png)
+![MST Graph](figures/Figure_7.png)
 *> **Figure 2:** The Minimum Spanning Tree projection. Nodes represent patients, colored by clinical severity. The structural path from the Healthy cluster (Blue) to the Severe cluster (Red) physically demonstrates the inferred trajectory.*
 
 ---
@@ -89,6 +89,7 @@ thyroid-trajectory/
 ├── main.py                 # Main execution pipeline
 ├── requirements.txt        # Project dependencies
 └── README.md               # Documentation
+```
 
 ---
 
