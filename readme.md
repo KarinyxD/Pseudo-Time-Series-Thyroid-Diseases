@@ -90,6 +90,7 @@ thyroid-trajectory/
 ├── requirements.txt        # Project dependencies
 └── README.md               # Documentation
 
+---
 
 ## 🚀 How to Run
 
