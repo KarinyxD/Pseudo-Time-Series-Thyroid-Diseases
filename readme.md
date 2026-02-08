@@ -78,7 +78,7 @@ To construct the final trajectory, patients are ordered based on a priority tupl
 ### 5. Results: Generation of Pseudo-Time Series (PTS)
 The topological ordering derived from the proposed pipeline transforms the static cross-sectional data into dynamic **Pseudo-Time Series (PTS)**.
 * **Interpretation of Pseudo-Time:** The calculated distance from the healthy root ($t=0$) serves as a latent variable representing the **Disease Evolutionary Stage**. Effectively, this acts as a continuous **Severity Index**, mapping patients from "Normative Health" through "Transition" to "Severe Pathology".
-* **Data Export:** The final compilation of these $k=1500$ trajectories is exported to a CSV file (`trajectories_output.csv`). This dataset serves as the foundational input for subsequent temporal analysis (e.g., LSTM modeling or phenotypic clustering).
+* **Data Export:** The final compilation of these $k=1500$ trajectories is exported to a CSV file (`data/results/trajectories.csv`). This dataset serves as the foundational input for subsequent temporal analysis (e.g., LSTM modeling or phenotypic clustering).
 
 ---
 
@@ -148,11 +148,14 @@ To replicate the analysis and generate the pseudo-time trajectories:
     python main.py
     ```
 
-### Output
-The script will generate a CSV file in `data/results/trajectories.csv` containing:
-* **Original Clinical Values:** (TSH, T3, TT4, T4U, FTI, Age).
-* **Inferred Pseudo-Time:** The calculated disease progression score.
-* **Bootstrap Metadata:** Tracking of stability across the 50 simulation rounds.
+### Output Structure
+The script generates a comprehensive CSV file (`data/results/trajectories.csv`) structured as follows:
+
+* **Clinical Descriptors:** Raw physiological values (`TSH`, `T3`, `TT4`, `T4U`, `FTI`) and demographic data (`age`).
+* **Inferred Pseudo-Time (`posicao_t`):** The calculated temporal index (ranging from 0 to 29), representing the patient's ordered position in the evolutionary sequence.
+* **Trajectory Metadata (`id_trajetoria`):** Identifier for the bootstrap iteration (0 to $k$), allowing for the separation of distinct stochastic paths.
+* **Patient Identification (`paciente_id`):** Unique identifier mapping the node back to the original dataset record.
+* **Clinical Ground Truth (`severidade`):** The original classification label (0=Healthy, 1=Moderate, 2=Severe) used for validation and visualization coloring.
 
 ---
 
