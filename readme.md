@@ -141,3 +141,6 @@ The script will generate a CSV file in `data/results/trajectories.csv` containin
 
 2.  **Puccio, B., Tucker, A., & Veltri, P.** (2024). Clustering Pseudo Time Series: Exploring Trajectories in the Ageing Process. In *pHealth 2024 Proceedings* (Studies in Health Technology and Informatics, Vol. 314, pp. 118–119). IOS Press.
     * [DOI: 10.3233/SHTI240070](https://doi.org/10.3233/SHTI240070)
+
+## 📝 License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
