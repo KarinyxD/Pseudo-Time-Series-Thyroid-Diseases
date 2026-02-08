@@ -38,12 +38,12 @@ The pipeline is modularized into four distinct stages:
 * **Goal:** Preprocess and standardize raw data to ensure the dataset is clean, consistent, and ready for computational modeling.
 
 ### 2. Robustness Analysis (Stratified Stochastic Subsampling)
-* To validate that the inferred trajectory is **topologically stable** and not driven by sample density artifacts, we implemented a **Hybrid Monte Carlo Subsampling** strategy ($k=1500$ iterations).
-* **Stochastic Quotas:** Unlike standard bootstrapping (which may generate disconnected graphs in imbalanced data), we enforce variable quotas to guarantee **manifold connectivity** in every sample ($T=30$):
-    * **Severe ($n \in [1, 10]$):** Tests trajectory resilience in both sparse (single-case) and dense scenarios, ensuring the disease endpoint is structural rather than accidental.
-    * **Moderate ($n \in [5, 10]$) & Healthy ($n \in [1, 4]$):** Ensures the existence of a transitional "bridge" and a robust "root" for pseudotime calculation.
-* **Natural Density:** Remaining slots ($T - \sum selected$) are filled randomly from the global pool. This preserves the original dataset's healthy-dominant distribution without introducing artificial bias in the non-severe regions.
-* **Advantage over Reference:** This approach resolves the "missing endpoint" problem common in standard random sampling of imbalanced cohorts, ensuring that **100% of iterations** generate valid, connected trajectories for consensus building.
+* To validate the stability of the inferred trajectory, we implemented a **Hybrid Monte Carlo Subsampling** strategy ($k=1500$ iterations).
+* **Full Spectrum Coverage:** Unlike standard random sampling, which might exclude rare severe cases in imbalanced datasets (resulting in biologically truncated trajectories), we enforce **stochastic quotas** to ensure every sample covers the full disease progression ($T=30$):
+    * **Severe ($n \in [1, 10]$):** Guarantees that the trajectory always reaches the disease endpoint, testing resilience in both sparse (single-case) and dense scenarios.
+    * **Moderate ($n \in [5, 10]$) & Healthy ($n \in [1, 4]$):** Ensures a stable "root" and the transitional bridge between health and disease.
+
+> **Note on Sampling Strategy:** The specific quota parameters (e.g., 1-10 severe cases) were empirically tuned to guarantee manifold connectivity for this specific cohort. Further investigation into adaptive density estimation or alternative filling strategies could refine this step, potentially reducing the need for manual constraint tuning in future applications.
 
 ### 3. Topological Modeling (Euclidean Matrix and MST)
 * **Algorithm:** We compute a euclidean distance matrix and build a **Minimum Spanning Tree (MST)**.
@@ -53,8 +53,6 @@ The pipeline is modularized into four distinct stages:
 * **Root Definition:** A centroid of healthy patients is defined as $t=0$.
 * **Pathfinding:** We use **Dijkstra's Algorithm** to calculate the distance from the root to every other patient along the MST edges.
 * **Result:** This distance is the **Pseudo-Time**. It represents the "severity score" or the evolutionary stage of the disease.
-
-
 
 ---
 
@@ -135,3 +133,11 @@ The script will generate a CSV file in `data/results/trajectories.csv` containin
 **Kariny Abrahão**
 
 *Computer Scientist*
+
+## 📚 Referências
+
+1.  **Tucker, A., Li, Y., & Garway-Heath, D.** (2017). Updating Markov models to integrate cross-sectional and longitudinal studies. *Artificial Intelligence in Medicine*, 77, 23–30.
+    * [DOI: 10.1016/j.artmed.2017.03.005](https://doi.org/10.1016/j.artmed.2017.03.005)
+
+2.  **Puccio, B., Tucker, A., & Veltri, P.** (2024). Clustering Pseudo Time Series: Exploring Trajectories in the Ageing Process. In *pHealth 2024 Proceedings* (Studies in Health Technology and Informatics, Vol. 314, pp. 118–119). IOS Press.
+    * [DOI: 10.3233/SHTI240070](https://doi.org/10.3233/SHTI240070)
