@@ -132,7 +132,7 @@ thyroid-trajectory/
 To replicate the analysis and generate the pseudo-time trajectories:
 1.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/KarinyxD/Pseudo-Time-Series-Thyroid-Diseases.git](https://github.com/seu-usuario/thyroid-trajectory.git)
+    git clone "https://github.com/KarinyxD/Pseudo-Time-Series-Thyroid-Diseases.git"
     cd Pseudo-Time-Series-Thyroid-Diseases 
     ```
 
