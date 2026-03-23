@@ -145,7 +145,7 @@ To replicate the analysis and generate the pseudo-time trajectories:
 3.  **Run the Inference Pipeline:**
     Execute the main script to process data, run the bootstrap, and export results:
     ```bash
-    python main.py
+    python3 main.py
     ```
 
 ### Output Structure
