@@ -41,7 +41,7 @@ The pipeline is modularized into four distinct stages:
 > * **Impact on Modeling:** Including these cases would introduce significant **label noise**, as their biochemical signature (Low TSH) contradicts the standard trajectory of primary thyroid failure (typically associated with rising TSH), potentially confounding the pseudo-time inference algorithm.
 
 ### 2. Stratified Subsampling
-* To validate the stability of the inferred trajectory, we implemented a **Hybrid Monte Carlo Subsampling** strategy ($k=1500$ iterations).
+* To validate the stability of the inferred trajectory, we implemented a **Stratified Subsampling* ($k=1500$ iterations).
 * **Trajectory Standardization ($T=30$):** We fixed the sample size to 30 to standardize the extent of the generated graphs and trajectories. This ensures that all iterations possess the same topological length, allowing for direct and consistent statistical comparison.
 * **Full Spectrum Coverage (Addressing Imbalance):** Our dataset exhibits a significant **class imbalance** typical of medical cohorts (~6,700 Healthy controls vs. ~600 Pathological cases).
     * **The Challenge:** Given this distribution, standard random sampling would probabilistically yield subsets saturated with healthy individuals, effectively "cutting off" the later stages of the disease.
